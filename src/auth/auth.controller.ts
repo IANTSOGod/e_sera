@@ -1,16 +1,25 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { Credentialdto } from 'src/interfaces/dto/credential.dto';
 import { Logindto } from 'src/interfaces/dto/login.dto';
 import { Signupdto } from 'src/interfaces/dto/signup.dto';
 import { AuthService } from './auth.service';
+import { JwtAccessAuthGuard } from './guards/JwtAccessAuthGuard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authservice: AuthService) {}
 
-  //To remove in production
-  @Get('/')
-  async getuser() {
-    return this.authservice.getuserlist();
+  @UseGuards(JwtAccessAuthGuard)
+  @Get('/me')
+  private me(@Request() req: { user: Credentialdto }) {
+    return req.user;
   }
 
   @Post('/login')

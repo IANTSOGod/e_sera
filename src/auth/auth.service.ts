@@ -66,15 +66,6 @@ export class AuthService {
     }
   }
 
-  async getuserlist() {
-    const response = await this.prismaservice.user.findMany();
-    if (response.length > 0) {
-      return response;
-    } else {
-      throw new NotFoundException({ message: 'Aucun user acutellement' });
-    }
-  }
-
   private async jwtsign(payload: Jwtsigndto) {
     const { email } = payload;
     const user = await this.prismaservice.user.findUnique({
@@ -84,9 +75,11 @@ export class AuthService {
       const payloadata = { id: user.id };
       const accesstoken = await this.jwtservice.signAsync(payloadata, {
         expiresIn: '1d',
+        secret: process.env.JWT_ACCESS_SECRET as string,
       });
       const refreshtoken = await this.jwtservice.signAsync(payloadata, {
         expiresIn: '7d',
+        secret: process.env.JWT_REFRESH_SECRET as string,
       });
       const response = await this.prismaservice.user.update({
         data: {
