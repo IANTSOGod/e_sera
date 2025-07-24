@@ -4,16 +4,19 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 import { Jwtsigndto } from 'src/interfaces/dto/jwtsign.dto';
 import { Logindto } from 'src/interfaces/dto/login.dto';
 import { Signupdto } from 'src/interfaces/dto/signup.dto';
-import { Credentialsresponse } from 'src/interfaces/types/Credentialsresponse';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prismaservice: PrismaService) {}
+  constructor(
+    private readonly prismaservice: PrismaService,
+    private readonly jwtservice: JwtService,
+  ) {}
 
   async login(data: Logindto) {
     const { email, password } = data;
@@ -25,11 +28,7 @@ export class AuthService {
       const ispassvalid = await compare(password, response.password);
 
       if (ispassvalid) {
-        return new Credentialsresponse(
-          response.email,
-          response.username,
-          response.photolink,
-        );
+        return this.jwtsign({ email: response.email });
       } else {
         throw new UnauthorizedException({ message: 'Invalid credentials' });
       }
@@ -58,11 +57,7 @@ export class AuthService {
           },
         });
         if (response) {
-          return new Credentialsresponse(
-            response.email,
-            response.username,
-            response.photolink,
-          );
+          return this.jwtsign({ email: response.email });
         }
       } catch (error) {
         console.log(error); //to remove in production
@@ -71,7 +66,7 @@ export class AuthService {
     }
   }
 
-  private async getuserlist() {
+  async getuserlist() {
     const response = await this.prismaservice.user.findMany();
     if (response.length > 0) {
       return response;
@@ -80,9 +75,38 @@ export class AuthService {
     }
   }
 
-  //to implement later
-  private jwtsign(payload: Jwtsigndto) {
+  private async jwtsign(payload: Jwtsigndto) {
     const { email } = payload;
-    console.log(email);
+    const user = await this.prismaservice.user.findUnique({
+      where: { email: email },
+    });
+    if (user) {
+      const payloadata = { id: user.id };
+      const accesstoken = await this.jwtservice.signAsync(payloadata, {
+        expiresIn: '1d',
+      });
+      const refreshtoken = await this.jwtservice.signAsync(payloadata, {
+        expiresIn: '7d',
+      });
+      const response = await this.prismaservice.user.update({
+        data: {
+          acessToken: accesstoken,
+          refreshToken: refreshtoken,
+        },
+        where: {
+          id: user.id,
+        },
+      });
+      if (response) {
+        return {
+          accesstoken: accesstoken,
+          refreshtoken: refreshtoken,
+        };
+      } else {
+        throw new HttpException({ message: 'Erreur jwt' }, 500);
+      }
+    } else {
+      throw new NotFoundException({ message: 'User inconnu' });
+    }
   }
 }
