@@ -7,7 +7,10 @@ import { JwtverifDto } from 'src/interfaces/dto/jwtverif.dto';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt-access') {
+export class JwtAccessStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-access',
+) {
   constructor(private readonly prismaservice: PrismaService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

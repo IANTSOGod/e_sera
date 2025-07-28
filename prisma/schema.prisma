@@ -27,7 +27,7 @@ model User{
   username String
   email String @unique
   password String 
-  photolink String
+  photolink String @default("")
   isverified Boolean @default(false)
   acessToken String @default(nanoid()) 
   refreshToken String @default(nanoid())

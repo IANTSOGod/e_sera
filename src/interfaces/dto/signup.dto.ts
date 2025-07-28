@@ -9,6 +9,4 @@ export class Signupdto {
   @IsNotEmpty({ message: 'Mot de passe non vide' })
   @MinLength(8, { message: 'Mot de passe trop court' })
   password: string;
-  @IsNotEmpty({ message: 'Lien photo non null' })
-  photolink: string;
 }

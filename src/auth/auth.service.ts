@@ -28,7 +28,11 @@ export class AuthService {
       const ispassvalid = await compare(password, response.password);
 
       if (ispassvalid) {
-        return this.jwtsign({ email: response.email });
+        if (response.isverified) {
+          return this.jwtsign({ email: response.email });
+        } else {
+          throw new UnauthorizedException({ message: 'Email non vérifié' });
+        }
       } else {
         throw new UnauthorizedException({ message: 'Invalid credentials' });
       }
@@ -38,7 +42,7 @@ export class AuthService {
   }
 
   async registerEmailandPassword(data: Signupdto) {
-    const { username, email, password, photolink } = data;
+    const { username, email, password } = data;
     const hashedmdp = await hash(password, 12);
     const existinguser = await this.prismaservice.user.findUnique({
       where: { email: email },
@@ -52,12 +56,11 @@ export class AuthService {
             email: email,
             username: username,
             password: hashedmdp,
-            photolink: photolink,
             provider: 'EMAIL',
           },
         });
         if (response) {
-          return this.jwtsign({ email: response.email });
+          return { email: response.email };
         }
       } catch (error) {
         console.log(error); //to remove in production
