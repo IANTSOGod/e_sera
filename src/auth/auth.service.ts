@@ -6,9 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
+import { EmailService } from 'src/email/email.service';
 import { Jwtsigndto } from 'src/interfaces/dto/jwtsign.dto';
 import { Logindto } from 'src/interfaces/dto/login.dto';
+import { OtpSendDto } from 'src/interfaces/dto/OtpSend.dto';
+import { OtpVerificationDto } from 'src/interfaces/dto/OtpVerification.dto';
+import { ResetpasswordDto } from 'src/interfaces/dto/Resetpassword.dto';
 import { Signupdto } from 'src/interfaces/dto/signup.dto';
+import { OtpService } from 'src/otp/otp.service';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -16,6 +21,8 @@ export class AuthService {
   constructor(
     private readonly prismaservice: PrismaService,
     private readonly jwtservice: JwtService,
+    private readonly emailservice: EmailService,
+    private readonly otpservice: OtpService,
   ) {}
 
   async login(data: Logindto) {
@@ -66,6 +73,80 @@ export class AuthService {
         console.log(error); //to remove in production
         throw new HttpException({ message: 'Erreur de création' }, 500);
       }
+    }
+  }
+
+  //Not tested
+  async sendOtp(data: OtpSendDto) {
+    const otpcontent = this.otpservice.generateToken();
+    try {
+      await this.emailservice.sendEmail({
+        to: data.email,
+        subject: 'Otp verification',
+        text: `Please insert this code in the app : ${otpcontent}`,
+      });
+      return { message: 'Email envoyé' };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException({ message: 'Echec vérification email' }, 500);
+    }
+  }
+  //Not tested
+  async verifyAccount(data: OtpVerificationDto) {
+    const isvalid = this.otpservice.verifyToken(data.otp);
+    if (isvalid) {
+      try {
+        await this.prismaservice.user.update({
+          data: {
+            isverified: true,
+          },
+          where: {
+            email: data.email,
+          },
+        });
+        return this.jwtsign({ email: data.email });
+      } catch (error) {
+        console.log(error);
+        throw new HttpException({ message: 'Compte vérifié' }, 500);
+      }
+    }
+  }
+  //Not tested
+  async sendResetCode(data: OtpSendDto) {
+    const otpcontent = this.otpservice.generateToken();
+    try {
+      await this.emailservice.sendEmail({
+        to: data.email,
+        subject: 'Reset password',
+        text: `Use this code in the app to continue ${otpcontent}`,
+      });
+    } catch (error) {
+      console.log(error);
+      throw new HttpException({ message: "Erreur lors de l'envoi" }, 500);
+    }
+  }
+
+  //Not tested
+  async resetPassword(data: ResetpasswordDto) {
+    const isvalid = this.otpservice.verifyToken(data.otp);
+    if (isvalid) {
+      const mdp = await hash(data.newpassword, 12);
+      try {
+        await this.prismaservice.user.update({
+          data: {
+            password: mdp,
+          },
+          where: {
+            email: data.email,
+          },
+        });
+        return { message: 'Mot de passe changé' };
+      } catch (error) {
+        console.log(error);
+        throw new NotFoundException({ message: 'User non trouvé' });
+      }
+    } else {
+      throw new UnauthorizedException({ message: 'Otp invalide' });
     }
   }
 

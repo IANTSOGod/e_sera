@@ -15,7 +15,7 @@ export class EmailService {
     });
   }
 
-  public async sendOtp(data: EmailsendDto) {
+  public async sendEmail(data: EmailsendDto) {
     try {
       await this.transporter.sendMail(data);
     } catch (error) {
