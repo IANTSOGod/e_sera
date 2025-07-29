@@ -6,7 +6,17 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Accesstokendto } from 'src/interfaces/dto/accesstoken.dto';
 import { Credentialdto } from 'src/interfaces/dto/credential.dto';
 import { Logindto } from 'src/interfaces/dto/login.dto';
@@ -25,12 +35,33 @@ export class AuthController {
 
   @UseGuards(JwtAccessAuthGuard)
   @Get('/me')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtention info utilisateur',
+    description: 'Nécessite un accestoken en Authorization: Bearer token',
+  })
+  @ApiOkResponse({
+    description: 'Retourne des info utilisateur',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token invalide',
+  })
   private me(@Request() req: { user: Credentialdto }) {
     return req.user;
   }
 
   @UseGuards(JwtRefreshAuthGuard)
   @Get('/access')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Renouvellement accesstoken',
+    description:
+      'Necessite un refreshtoken non expiré en Authorization: Bearer token',
+  })
+  @ApiOkResponse({ description: 'Retourne un accesstoken ' })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh token invalide nécessite un re-login',
+  })
   private access(@Request() req: { user: Accesstokendto }) {
     return { accessToken: req.user.accesstoken };
   }
@@ -42,6 +73,12 @@ export class AuthController {
       'Permet a un utilisateur de se connecter et retourne accesstoken et refresh token',
   })
   @ApiBody({ type: Logindto })
+  @ApiOkResponse({ description: 'Donne accesstoken et refreshtoken' })
+  @ApiUnauthorizedResponse({
+    description: 'Mot de passe incorrect ou email non verifie',
+  })
+  @ApiNotFoundResponse({ description: 'utilisateur non trouvé' })
+  @ApiBadRequestResponse({ description: 'Mdp(Length=8),email(test@gmail.com)' })
   async login(@Body() body: Logindto) {
     return this.authservice.login(body);
   }
@@ -52,6 +89,14 @@ export class AuthController {
     description: 'Permet de creer un compte utilisateur de base non vérifié',
   })
   @ApiBody({ type: Signupdto })
+  @ApiOkResponse({
+    description: 'Utilisateur cree avec succes et retourne l email a confirme',
+  })
+  @ApiInternalServerErrorResponse({ description: 'Inscription en bdd echoué' })
+  @ApiBadRequestResponse({
+    description:
+      'Mdp(Length=8),email(test@gmail.com),username(string not null)',
+  })
   async registerEAP(@Body() body: Signupdto) {
     return this.authservice.registerEmailandPassword(body);
   }
@@ -63,6 +108,8 @@ export class AuthController {
       'Permet a un utilisateur de recevoir un code otp pour la vérification de compte',
   })
   @ApiBody({ type: OtpSendDto })
+  @ApiOkResponse({ description: 'Otp envoyé par email' })
+  @ApiInternalServerErrorResponse({ description: 'Problème env email' })
   async sendotp(@Body() body: OtpSendDto) {
     return this.authservice.sendOtp(body);
   }
@@ -73,6 +120,9 @@ export class AuthController {
     description: 'Permet a un utilisateur de valider son compte',
   })
   @ApiBody({ type: OtpVerificationDto })
+  @ApiOkResponse({ description: 'Retourne accesstoken et refreshtoken' })
+  @ApiUnauthorizedResponse({ description: 'Otp invalide ou expire' })
+  @ApiInternalServerErrorResponse({ description: 'Erreur de mise a jour bdd' })
   async verifyotp(@Body() body: OtpVerificationDto) {
     return this.authservice.verifyAccount(body);
   }

@@ -76,7 +76,6 @@ export class AuthService {
     }
   }
 
-  //Not tested
   async sendOtp(data: OtpSendDto) {
     const otpcontent = this.otpservice.generateToken();
     try {
@@ -91,7 +90,7 @@ export class AuthService {
       throw new HttpException({ message: 'Echec vérification email' }, 500);
     }
   }
-  //Not tested
+
   async verifyAccount(data: OtpVerificationDto) {
     const isvalid = this.otpservice.verifyToken(data.otp);
     if (isvalid) {
@@ -107,8 +106,10 @@ export class AuthService {
         return this.jwtsign({ email: data.email });
       } catch (error) {
         console.log(error);
-        throw new HttpException({ message: 'Compte vérifié' }, 500);
+        throw new HttpException({ message: 'Compte non vérifié' }, 500);
       }
+    } else {
+      throw new UnauthorizedException({ message: 'Otp invalide ou expiré' });
     }
   }
   //Not tested
