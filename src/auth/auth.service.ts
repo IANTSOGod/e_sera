@@ -128,7 +128,6 @@ export class AuthService {
     }
   }
 
-  //Not tested
   async resetPassword(data: ResetpasswordDto) {
     const isvalid = this.otpservice.verifyToken(data.otp);
     if (isvalid) {
