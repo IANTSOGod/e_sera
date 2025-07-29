@@ -109,10 +109,10 @@ export class AuthService {
         throw new HttpException({ message: 'Compte non vérifié' }, 500);
       }
     } else {
-      throw new UnauthorizedException({ message: 'Otp invalide ou expiré' });
+      throw new UnauthorizedException({ message: 'Otp expiré' });
     }
   }
-  //Not tested
+
   async sendResetCode(data: OtpSendDto) {
     const otpcontent = this.otpservice.generateToken();
     try {
@@ -121,6 +121,7 @@ export class AuthService {
         subject: 'Reset password',
         text: `Use this code in the app to continue ${otpcontent}`,
       });
+      return { message: 'Code de changement envoyé' };
     } catch (error) {
       console.log(error);
       throw new HttpException({ message: "Erreur lors de l'envoi" }, 500);
@@ -147,7 +148,7 @@ export class AuthService {
         throw new NotFoundException({ message: 'User non trouvé' });
       }
     } else {
-      throw new UnauthorizedException({ message: 'Otp invalide' });
+      throw new UnauthorizedException({ message: 'Otp expiré' });
     }
   }
 
