@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { EmailService } from 'src/email/email.service';
+import { EmailModule } from 'src/email/email.module';
 import { OtpService } from 'src/otp/otp.service';
 import { PrismaService } from 'src/prisma.service';
 import { AuthController } from './auth.controller';
@@ -17,6 +17,7 @@ import { JwtRefreshStrategy } from './strategies/JwtRefreshStrategy';
       secret: process.env.JWT_ACCESS_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
+    EmailModule,
   ],
   providers: [
     AuthService,
@@ -25,7 +26,6 @@ import { JwtRefreshStrategy } from './strategies/JwtRefreshStrategy';
     JwtAccessAuthGuard,
     JwtRefreshStrategy,
     JwtRefreshAuthGuard,
-    EmailService,
     OtpService,
   ],
   controllers: [AuthController],

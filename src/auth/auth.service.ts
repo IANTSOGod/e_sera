@@ -79,7 +79,7 @@ export class AuthService {
   async sendOtp(data: OtpSendDto) {
     const otpcontent = this.otpservice.generateToken();
     try {
-      await this.emailservice.sendEmail({
+      await this.emailservice.addtoqueue({
         to: data.email,
         subject: 'Otp verification',
         text: `Please insert this code in the app : ${otpcontent}`,
@@ -116,7 +116,7 @@ export class AuthService {
   async sendResetCode(data: OtpSendDto) {
     const otpcontent = this.otpservice.generateToken();
     try {
-      await this.emailservice.sendEmail({
+      await this.emailservice.addtoqueue({
         to: data.email,
         subject: 'Reset password',
         text: `Use this code in the app to continue ${otpcontent}`,

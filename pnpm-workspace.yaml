@@ -3,3 +3,4 @@ onlyBuiltDependencies:
   - '@prisma/client'
   - '@scarf/scarf'
   - bcrypt
+  - msgpackr-extract
