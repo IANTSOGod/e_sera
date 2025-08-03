@@ -1,20 +1,25 @@
-import { Process, Processor } from '@nestjs/bull';
-import { Job } from 'bull';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
 import { EmailsendDto } from 'src/interfaces/dto/Emailsend.dto';
 import { EmailService } from './email.service';
 
 @Processor('email')
-export class EmailProcesssor {
-  constructor(private readonly emailservice: EmailService) {}
+export class EmailProcesssor extends WorkerHost {
+  constructor(private readonly emailservice: EmailService) {
+    super();
+  }
 
-  @Process('sendEmail')
-  async handleEmail(job: Job<EmailsendDto>) {
-    // console.log('Traitement de la job de', job.data.to);
+  async process(job: Job<EmailsendDto>) {
     try {
-      await this.emailservice.sendEmail(job.data);
+      return await this.emailservice.sendEmail(job.data);
     } catch (error) {
       console.log('Erreur queue:', error);
       throw error;
     }
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(job: Job<EmailsendDto>) {
+    console.log(`Job for ${job.data.to} completed`);
   }
 }

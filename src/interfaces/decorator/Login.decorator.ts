@@ -16,7 +16,25 @@ export function LoginSwagger() {
       description:
         'Permet a un utilisateur de se connecter et retourne accesstoken et refresh token',
     }),
-    ApiBody({ type: Logindto }),
+    ApiBody({
+      type: Logindto,
+      description: 'Email et mot de passe',
+      schema: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+            format: '<test>@<provider>',
+            description: 'Email utilisateur',
+          },
+          password: {
+            type: 'string',
+            format: 'Iantso123!',
+            description: 'Mot de passe utilisateur',
+          },
+        },
+      },
+    }),
     ApiOkResponse({ description: 'Donne accesstoken et refreshtoken' }),
     ApiUnauthorizedResponse({
       description: 'Mot de passe incorrect ou email non verifie',

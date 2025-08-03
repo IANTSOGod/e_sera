@@ -1,6 +1,6 @@
-import { InjectQueue } from '@nestjs/bull';
+import { InjectQueue } from '@nestjs/bullmq';
 import { HttpException, Injectable } from '@nestjs/common';
-import { Queue } from 'bull';
+import { Queue } from 'bullmq';
 import * as nodemailer from 'nodemailer';
 import { EmailsendDto } from 'src/interfaces/dto/Emailsend.dto';
 

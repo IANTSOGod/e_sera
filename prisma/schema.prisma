@@ -20,6 +20,14 @@ enum Provider{
  GITHUB
 }
 
+enum Reacttype{
+  LIKE
+  DISLIKE
+  HAHA
+  LOVE
+  SAD
+}
+
 model User{
   id String @id @default(cuid())
   username String
@@ -30,4 +38,62 @@ model User{
   acessToken String @default(nanoid()) 
   refreshToken String @default(nanoid())
   provider Provider
+  pub_creator Publication[] @relation("create pub")
+  comments Comment[] @relation("User comments")
+  user_reacts Reaction[] @relation("User reacts")
+  user_share Partage[] @relation("User shares")
+} 
+
+
+model Publication{
+  id String @id @default(cuid())
+  creator_id String 
+  title String
+  description String
+  createdAt DateTime @default(now())
+  creator User @relation("create pub",fields: [creator_id],references: [id],onDelete: Cascade)
+  pub_photo_uploader Photos[] @relation("has photos")
+  has_comments Comment[] @relation("Pub has comments")
+  pub_has_reaction Pub_reaction[] @relation("Pub has reaction")
+  pub_is_shared Partage[] @relation("Publication is shared")
+}
+
+model Photos{
+  id String @id @default(cuid())
+  uploader_id String
+  photo_link String
+  pub_photo Publication @relation("has photos",fields: [uploader_id],references: [id],onDelete: Cascade)
+}
+
+model Comment{
+  id String @id @default(cuid())
+  message String
+  user_id String
+  pub_id String
+  has_comment_user User @relation("User comments",fields: [user_id],references: [id],onDelete: Cascade)
+  has_pub_rattached Publication @relation("Pub has comments",fields: [pub_id],references: [id],onDelete: Cascade)
+}
+
+model Reaction{
+  id String @id @default(cuid())
+  type Reacttype
+  reactor_id String
+  reacts User @relation("User reacts",fields: [reactor_id],references: [id],onDelete: Cascade) 
+  link_to_reaction Pub_reaction[] @relation("Belongs to reaction")
+}
+
+model Pub_reaction{
+  id String @id @default(cuid())
+  pub_id String
+  react_id String
+  pub_has_reaction Publication @relation("Pub has reaction",fields: [pub_id],references: [id],onDelete: Cascade)
+  link_to_reaction Reaction @relation("Belongs to reaction",fields: [react_id],references: [id],onDelete: Cascade)
+}
+
+model Partage{
+  id String @id @default(cuid())
+  user_id String
+  pub_id String
+  user_share User @relation("User shares",fields: [user_id],references: [id],onDelete: Cascade)
+  pub_is_shared Publication @relation("Publication is shared",fields: [pub_id],references: [id],onDelete: Cascade)
 }
