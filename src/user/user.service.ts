@@ -1,4 +1,3 @@
-// user.service.ts
 import { InjectQueue } from '@nestjs/bullmq';
 import {
   BadRequestException,
@@ -10,66 +9,21 @@ import {
 } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { v2 as Cloudinary } from 'cloudinary';
-import { CloudinaryResponse } from 'src/interfaces/dto/cloudinary.dto';
+import { CLOUDINARY } from 'src/cloudinary/cloudinary.provider';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { ProfileWithMulterDto } from 'src/interfaces/dto/profilephoto.dto';
 import { Resultdto } from 'src/interfaces/dto/result.dto';
 import { Uploadmqdto } from 'src/interfaces/dto/uploadmq.dto';
 import { PrismaService } from 'src/prisma.service';
-import { CLOUDINARY } from './cloudinary.provider';
 
 @Injectable()
 export class UserService {
   constructor(
-    @Inject(CLOUDINARY) private readonly cloudinary: typeof Cloudinary,
     private readonly prismaService: PrismaService,
     @InjectQueue('user-upload') private photoqueue: Queue,
+    private readonly cloudinaryservice: CloudinaryService,
+    @Inject(CLOUDINARY) private readonly cloud: typeof Cloudinary,
   ) {}
-
-  async uploadFile(
-    buffer: Buffer,
-    filename: string,
-  ): Promise<CloudinaryResponse> {
-    if (!buffer || buffer.length === 0) {
-      throw new BadRequestException('Le fichier est vide ou invalide');
-    }
-
-    if (!filename || filename.trim() === '') {
-      throw new BadRequestException('Le nom du fichier est requis');
-    }
-
-    return new Promise((resolve, reject) => {
-      this.cloudinary.uploader
-        .upload_stream(
-          {
-            public_id: filename,
-            resource_type: 'auto',
-            folder: 'user-profiles',
-            transformation: [
-              { width: 400, height: 400, crop: 'fill' }, // Optimisation des images de profil
-              { quality: 'auto' },
-            ],
-          },
-          (error, result) => {
-            if (error) {
-              reject(
-                new InternalServerErrorException(
-                  `Échec du téléchargement du fichier "${filename}": ${error.message}`,
-                ),
-              );
-            } else if (result) {
-              resolve(result as CloudinaryResponse);
-            } else {
-              reject(
-                new InternalServerErrorException(
-                  'Échec du téléchargement: aucun résultat retourné',
-                ),
-              );
-            }
-          },
-        )
-        .end(buffer);
-    });
-  }
 
   async setprofile(data: Uploadmqdto) {
     try {
@@ -108,9 +62,9 @@ export class UserService {
 
     try {
       // Upload du fichier vers Cloudinary
-      const uploadResult = await this.uploadFile(
+      const uploadResult = await this.cloudinaryservice.uploadFile(
         data.file.buffer,
-        `user_${user.id}_${Date.now()}`, // Nom unique pour éviter les conflits
+        `user_${user.id}_${Date.now()}`,
       );
 
       // Mise à jour de la base de données
@@ -150,7 +104,7 @@ export class UserService {
   // Méthode utilitaire pour supprimer une ancienne photo de profil
   async deleteOldProfilePhoto(publicId: string): Promise<void> {
     try {
-      await this.cloudinary.uploader.destroy(publicId);
+      await this.cloud.uploader.destroy(publicId);
     } catch (error) {
       console.warn("Impossible de supprimer l'ancienne photo:", error);
       // Ne pas faire échouer l'opération principale si la suppression échoue

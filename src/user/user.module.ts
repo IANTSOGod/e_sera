@@ -1,7 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { PrismaService } from 'src/prisma.service';
-import { CloudinaryProvider } from './cloudinary.provider';
 import { ProfileProcessor } from './profile.processor';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -11,9 +11,10 @@ import { UserService } from './user.service';
     BullModule.registerQueue({
       name: 'user-upload',
     }),
+    CloudinaryModule,
   ],
   controllers: [UserController],
-  providers: [UserService, PrismaService, CloudinaryProvider, ProfileProcessor],
+  providers: [UserService, PrismaService, ProfileProcessor],
   exports: [UserService],
 })
 export class UserModule {}

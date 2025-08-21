@@ -5,6 +5,8 @@ import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { PrismaService } from './prisma.service';
 import { UserModule } from './user/user.module';
+import { PublicationModule } from './publication/publication.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { UserModule } from './user/user.module';
     AuthModule,
     EmailModule,
     UserModule,
+    PublicationModule,
+    CloudinaryModule,
   ],
   providers: [PrismaService],
 })

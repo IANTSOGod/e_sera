@@ -1,6 +1,7 @@
 import {
   HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -71,7 +72,7 @@ export class AuthService {
         }
       } catch (error) {
         console.log(error); //to remove in production
-        throw new HttpException({ message: 'Erreur de création' }, 500);
+        throw new InternalServerErrorException({ message: 'Erreur serveur' });
       }
     }
   }

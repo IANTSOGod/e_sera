@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, Length, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsStrongPassword, Length } from 'class-validator';
 
 export class ResetpasswordDto {
   @IsNotEmpty({ message: 'Email non vide' })
@@ -14,7 +14,7 @@ export class ResetpasswordDto {
   @ApiProperty({ description: 'Otp a verifie', example: '123456' })
   otp: string;
   @IsNotEmpty({ message: 'Mot de passe non vide' })
-  @MinLength(8, { message: 'Mot de passe trop court' })
+  @IsStrongPassword({}, { message: 'Mot de passe trop simple' })
   @ApiProperty({
     description: 'Nouveau mdp utilisateur',
     example: 'Iantso123!',

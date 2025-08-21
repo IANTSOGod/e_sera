@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsStrongPassword } from 'class-validator';
 
 export class Signupdto {
   @IsNotEmpty({ message: 'Username non vide' })
@@ -16,7 +16,7 @@ export class Signupdto {
   })
   email: string;
   @IsNotEmpty({ message: 'Mot de passe non vide' })
-  @MinLength(8, { message: 'Mot de passe trop court' })
+  @IsStrongPassword({}, { message: 'Mdp trop simple' })
   @ApiProperty({
     description: 'Mot de passe utilisateur',
     example: 'Iantso123!',
